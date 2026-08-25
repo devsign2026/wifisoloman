@@ -13,6 +13,8 @@ export CHANNEL="149/80"                # 채널/대역폭. DFS(52~144) 피할 �
 #   macOS: ifconfig en0 | grep ether
 export TX_MAC="xx:xx:xx:xx:xx:xx"
 
+export PING_INTERVAL="0.05"   # 트래픽 발생기 ping 간격. 캡처 간 비교하려면 고정할 것
+
 # 아래 명령의 출력을 그대로 붙여넣을 것:
 #   makecsiparams -c $CHANNEL -C 1 -N 1 -m $TX_MAC
 export CSI_PARAMS="<makecsiparams 출력>"

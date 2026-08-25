@@ -23,6 +23,13 @@ from csi_pipeline import (load_amplitude, resample_uniform,
 
 CHANCE_RATE = 0.09  # 밴드 0.15~0.6Hz에서 ±0.02Hz가 우연히 맞을 확률
 
+# 선명도(피크/밴드중앙값)가 이 값 아래면 스펙트럼이 사실상 평평하다는 뜻이고,
+# 그때 "피크 위치"는 잡음이 FFT 격자 위 어디에 앉았느냐일 뿐 의미가 없다.
+# 실측 근거: 빈 방 7분 캡처를 39초 창으로 쪼개면 0.20Hz 우세 서브캐리어 수가
+# 115 -> 112 -> 0 -> 74 -> 12 -> 2 -> 60 으로 요동친다(선명도는 내내 ~2).
+# 이 값을 넘지 못하면 분포를 해석하지 말 것.
+SHARPNESS_FLOOR = 4.0
+
 
 def subcarrier_peaks(pcap_path, low=0.15, high=0.6, edge_guard=6, seconds=None):
     """서브캐리어별로 밴드패스 + FFT -> (피크주파수[], 선명도[], fs, 길이)"""
@@ -84,10 +91,18 @@ def diagnose(pcap_path, expect_bpm=None, low=0.15, high=0.6, tol=0.02, seconds=N
         print(f"[경고] {bottom}/{len(peaks)}개가 밴드 최하단({low}Hz)에 몰림")
         print(f"       -> 호흡이 아니라 느린 드리프트가 지배. 캡처 중 자세 변화/환경 변동 의심")
 
-    print(f"[정보] 피크 선명도 중앙값 {np.median(sharpness):.2f}")
+    med_sharp = np.median(sharpness)
+    print(f"[정보] 피크 선명도 중앙값 {med_sharp:.2f}")
+    if med_sharp < SHARPNESS_FLOOR:
+        print(f"[경고] 선명도가 {SHARPNESS_FLOOR} 미만 — 스펙트럼이 평평함.")
+        print( "       위 피크 분포는 잡음이며 해석하면 안 됨.")
+        print( "       재실 여부·호흡수 판단의 근거로 쓰지 말 것.")
 
     if expect_bpm is None:
-        print("[판정] --expect 미지정 (기준선 캡처면 정상). 위 분포를 호흡 캡처와 비교할 것")
+        if med_sharp < SHARPNESS_FLOOR:
+            print("[판정] 대역에 유의미한 주기 성분 없음 (조용한 기준선)")
+        else:
+            print("[판정] --expect 미지정. 위 분포를 호흡 캡처와 비교할 것")
         return None
 
     target = expect_bpm / 60
@@ -96,6 +111,9 @@ def diagnose(pcap_path, expect_bpm=None, low=0.15, high=0.6, tol=0.02, seconds=N
     print(f"[결과] 정답 {target:.3f}Hz(±{tol}) 히트: {hits}/{len(peaks)} ({rate*100:.0f}%)")
     print(f"       우연 수준 ≈ {CHANCE_RATE*100:.0f}%")
 
+    if med_sharp < SHARPNESS_FLOOR:
+        print("[판정] ❌ 스펙트럼이 평평해 히트율 자체가 무의미 — 신호 없음")
+        return rate
     if rate < CHANCE_RATE:
         print("[판정] ❌ 우연보다 낮음 — 호흡 신호 없음. 알고리즘 손대지 말고 재캡처할 것")
     elif rate < CHANCE_RATE * 2:
