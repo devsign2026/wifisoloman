@@ -4,6 +4,10 @@
 
 export PI_HOST="raspberrypi.local"     # mDNS 호스트명. IP 하드코딩 금지
 export PI_USER="pi"
+# 파이 eth0 MAC — 공유기 DHCP 예약에 사용. `cat /sys/class/net/eth0/address`
+export PI_ETH_MAC="xx:xx:xx:xx:xx:xx"
+# DHCP 실패 시 폴백 주소 (/etc/dhcpcd.conf 의 static_fallback 과 일치시킬 것)
+export PI_FALLBACK_IP="172.30.1.222"
 
 export ROUTER_SSID="<실험용 5GHz SSID>"
 export ROUTER_IP="192.168.0.1"
