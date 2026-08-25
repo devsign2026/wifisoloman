@@ -178,6 +178,19 @@ python3 csi_pipeline.py data/baseline_empty_<날짜>.pcap --plot data/baseline_e
 
 ---
 
+## 8. 결과 푸시
+
+캡처와 분석이 끝나면 `data/README.md` 대장에 환경 조건을 적고 푸시.
+
+```bash
+git add -A && git commit -m "캡처 추가: <설명>" && git push
+# 원격: https://github.com/devsign2026/wifisoloman
+```
+
+> `config.sh` 가 `git status` 에 보이면 커밋하지 말 것 (실제 SSID/MAC 포함).
+
+---
+
 ## 빠른 체크리스트
 
 - [ ] 파이 켜짐, `ssh $PI_USER@$PI_HOST` 됨

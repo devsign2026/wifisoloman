@@ -1,5 +1,7 @@
 # wifisoloman
 
+**저장소:** https://github.com/devsign2026/wifisoloman (organization `devsign2026`, public)
+
 WiFi CSI(Channel State Information)로 **사람의 호흡을 비접촉 감지**하는 실험 프로젝트.
 
 라즈베리파이의 WiFi 칩(BCM43455c0)을 [Nexmon CSI](https://github.com/seemoo-lab/nexmon_csi)로 패치해
@@ -162,6 +164,34 @@ python3 csi_diagnose.py data/breath_15bpm.pcap --expect 15
 ```bash
 python3 csi_pipeline.py data/breath_15bpm.pcap --plot out.png
 ```
+
+---
+
+## 저장소 / 푸시
+
+원격은 `devsign2026/wifisoloman` 하나만 쓴다.
+
+```bash
+git remote -v
+# origin  https://github.com/devsign2026/wifisoloman.git
+```
+
+새 캡처나 분석 결과가 나오면:
+
+```bash
+git add -A
+git commit -m "설명"
+git push
+```
+
+> ⚠️ **`config.sh` 는 절대 커밋하지 말 것.** SSID·MAC·호스트명 같은 실제 값이 들어 있고
+> `.gitignore` 로 막혀 있다. `git status` 에 뜨면 `.gitignore` 가 깨진 것이니 확인할 것.
+>
+> ⚠️ 이 저장소는 **public** 이다. 커밋 전에 새로 추가한 파일에 실제 SSID/MAC/비밀번호가
+> 섞이지 않았는지 확인할 것:
+> ```bash
+> git grep -nIiE "실제SSID|실제MAC" -- '*.md' '*.py' '*.sh'
+> ```
 
 ---
 

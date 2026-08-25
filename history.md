@@ -153,6 +153,22 @@ SSH로 파이에 원격 접속해 4개 캡처. 전부 패킷 드랍 0개로 정�
   샘플링레이트가 77~127Hz로 변동해 `-c 3000`이 40초가 아닌 22초로 끝난 사례 발생.
 - `data/*_plot.png` 전부 재생성 (과거 플롯은 고장난 필터 산물이라 삭제).
 
+### 14. GitHub 저장소 개설
+
+**https://github.com/devsign2026/wifisoloman** (organization `devsign2026`, public)
+
+앞으로 이 저장소로 푸시한다. 원격은 이거 하나만 쓸 것.
+
+공개 저장소이므로 실제 환경 값은 분리했음:
+- `config.sh` — 실제 SSID/MAC/호스트명. **`.gitignore` 로 제외, 커밋 금지**
+- `config.example.sh` — 템플릿 (공개)
+- 문서·명령은 `$PI_HOST` `$TX_MAC` `$CSI_PARAMS` 등 변수를 참조.
+  터미널에서 `source config.sh` 후 그대로 복붙 가능.
+- `pi_access.md` 의 파이 비밀번호 항목은 삭제, nexutil base64 파라미터도 치환
+  (MAC이 인코딩되어 있었음)
+
+`data/baseline_empty.pcap` → `baseline_occupied_20260713.pcap` 개명도 이때 반영.
+
 ---
 
 ## 다음에 할 일 (갱신 2026-08-25)
