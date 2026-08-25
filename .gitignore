@@ -1,6 +1,9 @@
 # 실제 환경 값 (SSID, MAC, 호스트) — 공개 저장소에 올리지 않음
 config.sh
 
+# 디자인 캔버스 빌드 산출물 (편집기 포함 2.4MB, 소스에서 재생성 가능)
+design/csi-sensing-app.html
+
 __pycache__/
 *.pyc
 .DS_Store

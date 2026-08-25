@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; background: #000; }
+    * { -webkit-font-smoothing: antialiased; box-sizing: border-box; }
+    a { color: #0A84FF; } a:hover { color: #409CFF; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #000000; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; color: #FFFFFF; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="height: 50px; flex-shrink: 0;"></div>
+
+  <div style="padding: 0 20px 14px 20px; display: flex; align-items: baseline; justify-content: space-between;">
+    <div style="font-size: 34px; font-weight: 700; letter-spacing: -0.4px;">기록</div>
+    <div style="font-size: 15px; color: #0A84FF;">이번 주</div>
+  </div>
+
+  <div style="flex-grow: 1; overflow: hidden; padding: 0 20px; display: flex; flex-direction: column; gap: 20px;">
+
+    <sc-for list="{{days}}" as="d" hint-placeholder-count="2">
+      <div>
+        <div style="font-size: 13px; color: rgba(235,235,245,0.5); letter-spacing: 0.3px; padding: 0 4px 7px 4px;">{{d.name}}</div>
+
+        <sc-for list="{{d.sessions}}" as="s" hint-placeholder-count="2">
+          <div style="background: #1C1C1E; border-radius: 16px; overflow: hidden; margin-bottom: 9px;">
+
+            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 16px;">
+              <div style="width: 34px; height: 34px; border-radius: 17px; background: {{s.bg}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{{s.tint}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3l7.5 3v6c0 4.4-3 8.3-7.5 9.6C7.5 20.3 4.5 16.4 4.5 12V6z"/>
+                  <path d="{{s.mark}}"/>
+                </svg>
+              </div>
+              <div style="flex-grow: 1; min-width: 0;">
+                <div style="font-size: 16px; font-weight: 500; letter-spacing: -0.1px;">{{s.span}}</div>
+                <div style="font-size: 13px; color: {{s.tint}}; margin-top: 1px;">{{s.result}}</div>
+              </div>
+              <div style="font-size: 14px; color: rgba(235,235,245,0.4); font-variant-numeric: tabular-nums; flex-shrink: 0;">{{s.dur}}</div>
+            </div>
+
+            <sc-if value="{{s.hasHits}}" hint-placeholder-val="{{ true }}">
+              <div style="border-top: 1px solid rgba(84,84,88,0.28);">
+                <sc-for list="{{s.hits}}" as="h" hint-placeholder-count="2">
+                  <div style="display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 18px;">
+                    <div style="width: 5px; height: 5px; border-radius: 3px; background: #FF453A; flex-shrink: 0;"></div>
+                    <div style="flex-grow: 1; font-size: 14px; color: rgba(235,235,245,0.78);">움직임 감지</div>
+                    <div style="font-size: 13px; color: rgba(235,235,245,0.4); font-variant-numeric: tabular-nums;">{{h.at}}</div>
+                    <div style="font-size: 13px; color: rgba(235,235,245,0.4); font-variant-numeric: tabular-nums; width: 42px; text-align: right;">{{h.e}}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+
+  </div>
+  <div style="flex-shrink: 0; height: 83px; background: rgba(22,22,24,0.94); border-top: 1px solid rgba(84,84,88,0.4); display: flex; padding: 8px 0 0 0;">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="rgba(235,235,245,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h3l2.5-7 4 14 2.5-7H21"/></svg>
+      <div style="font-size: 10px; color: rgba(235,235,245,0.4);">모니터</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#0A84FF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="3.6" cy="6" r="1.3"/><circle cx="3.6" cy="12" r="1.3"/><circle cx="3.6" cy="18" r="1.3"/></svg>
+      <div style="font-size: 10px; color: #0A84FF; font-weight: 500;">기록</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="rgba(235,235,245,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="13" rx="2.2"/><path d="M8 21h8"/><path d="M12 18v3"/></svg>
+      <div style="font-size: 10px; color: rgba(235,235,245,0.4);">장비</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="rgba(235,235,245,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>
+      <div style="font-size: 10px; color: rgba(235,235,245,0.4);">설정</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const ok  = { tint: '#30D158', bg: 'rgba(48,209,88,0.15)', mark: 'M9 12l2.2 2.2L15.4 10' };
+    const hit = { tint: '#FF453A', bg: 'rgba(255,69,58,0.15)', mark: 'M12 9v3.5M12 15.4h.01' };
+    return {
+      days: [
+        { name: '오늘', sessions: [
+          { ...hit, span: '02:19 – 02:47', result: '움직임 2회', dur: '28분', hasHits: true,
+            hits: [{ at: '02:41', e: '1.28' }, { at: '02:31', e: '1.34' }] },
+          { ...ok,  span: '00:12 – 01:05', result: '이상 없음', dur: '53분', hasHits: false, hits: [] }
+        ]},
+        { name: '어제', sessions: [
+          { ...ok,  span: '21:04 – 23:30', result: '이상 없음', dur: '2시간 26분', hasHits: false, hits: [] },
+          { ...hit, span: '14:20 – 15:02', result: '움직임 1회', dur: '42분', hasHits: true,
+            hits: [{ at: '14:48', e: '1.19' }] }
+        ]}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

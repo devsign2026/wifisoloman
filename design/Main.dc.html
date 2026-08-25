@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; background: #000; }
+    * { -webkit-font-smoothing: antialiased; box-sizing: border-box; }
+    a { color: #0A84FF; } a:hover { color: #409CFF; }
+  </style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #000000; font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; color: #FFFFFF; display: flex; flex-direction: column; overflow: hidden;">
+
+  <div style="height: 50px; flex-shrink: 0;"></div>
+
+  <div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 14px; padding: 0 20px;">
+
+    <div style="display: flex; align-items: baseline; justify-content: space-between;">
+      <div style="font-size: 34px; font-weight: 700; letter-spacing: -0.4px;">모니터</div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <div style="width: 7px; height: 7px; border-radius: 4px; background: {{s.dot}};"></div>
+        <div style="font-size: 13px; color: rgba(235,235,245,0.6);">감시 중</div>
+      </div>
+    </div>
+
+    <div style="background: {{s.cardBg}}; border: 1px solid {{s.cardBorder}}; border-radius: 18px; padding: 20px;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 52px; height: 52px; border-radius: 26px; background: {{s.iconBg}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="{{s.tint}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3l7.5 3v6c0 4.4-3 8.3-7.5 9.6C7.5 20.3 4.5 16.4 4.5 12V6z"/>
+            <path d="{{s.mark}}"/>
+          </svg>
+        </div>
+        <div style="flex-grow: 1;">
+          <div style="font-size: 22px; font-weight: 600; letter-spacing: -0.2px;">{{s.title}}</div>
+          <div style="font-size: 14px; color: rgba(235,235,245,0.6); margin-top: 2px;">{{s.sub}}</div>
+        </div>
+      </div>
+      <div style="display: flex; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(84,84,88,0.4);">
+        <div style="flex-grow: 1;">
+          <div style="font-size: 12px; color: rgba(235,235,245,0.45);">외출 경과</div>
+          <div style="font-size: 19px; font-weight: 600; margin-top: 3px; font-variant-numeric: tabular-nums;">28분</div>
+        </div>
+        <div style="width: 1px; background: rgba(84,84,88,0.4);"></div>
+        <div style="flex-grow: 1; padding-left: 16px;">
+          <div style="font-size: 12px; color: rgba(235,235,245,0.45);">대역 에너지</div>
+          <div style="font-size: 19px; font-weight: 600; margin-top: 3px; font-variant-numeric: tabular-nums;">{{s.energy}}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background: #1C1C1E; border-radius: 18px; padding: 16px 4px 12px 4px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 16px 10px 16px;">
+        <div style="font-size: 15px; font-weight: 600;">위상 파형</div>
+        <div style="font-size: 12px; color: rgba(235,235,245,0.45); font-variant-numeric: tabular-nums;">0.15 – 0.6 Hz · 30초</div>
+      </div>
+      <svg width="100%" height="100" viewBox="0 0 350 100" preserveAspectRatio="none" style="display: block;">
+        <line x1="0" y1="50" x2="350" y2="50" stroke="rgba(84,84,88,0.5)" stroke-width="1" stroke-dasharray="3 4"/>
+        <path d="M0 51 L10 47 L20 55 L30 44 L40 56 L50 48 L60 53 L70 42 L80 58 L90 46 L100 54 L110 45 L120 56 L130 49 L140 43 L150 57 L160 47 L170 52 L180 41 L190 59 L200 45 L210 55 L220 48 L230 53 L240 44 L250 56 L260 50 L270 46 L280 55 L290 42 L300 57 L310 49 L320 52 L330 45 L340 54 L350 48"
+              fill="none" stroke="{{s.tint}}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+      <div style="display: flex; justify-content: space-between; padding: 6px 16px 0 16px; font-size: 11px; color: rgba(235,235,245,0.35); font-variant-numeric: tabular-nums;">
+        <span>-30초</span><span>진폭 ±{{s.amp}}</span><span>현재</span>
+      </div>
+    </div>
+
+    <div style="background: #1C1C1E; border-radius: 18px; padding: 16px 4px 12px 4px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; padding: 0 16px 10px 16px;">
+        <div style="font-size: 15px; font-weight: 600;">대역 에너지 추이</div>
+        <div style="font-size: 12px; color: rgba(235,235,245,0.45);">최근 3분</div>
+      </div>
+      <svg width="100%" height="92" viewBox="0 0 350 92" preserveAspectRatio="none" style="display: block;">
+        <line x1="0" y1="32" x2="350" y2="32" stroke="rgba(235,235,245,0.28)" stroke-width="1" stroke-dasharray="4 4"/>
+        <path d="M0 71 L25 67 L50 73 L75 65 L100 69 L125 28 L150 20 L175 26 L200 63 L225 68 L250 64 L275 70 L300 66 L325 72 L350 68"
+              fill="none" stroke="rgba(235,235,245,0.35)" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M0 69 L25 68 L50 70 L75 67 L100 68 L125 55 L150 47 L175 52 L200 66 L225 68 L250 67 L275 69 L300 68 L325 69 L350 68"
+              fill="none" stroke="{{s.tint}}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>
+      <div style="display: flex; gap: 16px; padding: 8px 16px 0 16px; font-size: 11px; color: rgba(235,235,245,0.45);">
+        <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 12px; height: 2px; background: {{s.tint}}; border-radius: 1px;"></div>판정 (30초)</div>
+        <div style="display: flex; align-items: center; gap: 5px;"><div style="width: 12px; height: 2px; background: rgba(235,235,245,0.35); border-radius: 1px;"></div>빠름 (12초)</div>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: center; gap: 7px; height: 50px; border-radius: 14px; background: #1C1C1E;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FF453A" stroke-width="2" stroke-linecap="round"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+      <div style="font-size: 16px; font-weight: 500; color: #FF453A;">외출 모드 종료</div>
+    </div>
+
+  </div>
+  <div style="flex-shrink: 0; height: 83px; background: rgba(22,22,24,0.94); border-top: 1px solid rgba(84,84,88,0.4); display: flex; padding: 8px 0 0 0;">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#0A84FF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h3l2.5-7 4 14 2.5-7H21"/></svg>
+      <div style="font-size: 10px; color: #0A84FF; font-weight: 500;">모니터</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="rgba(235,235,245,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="3.6" cy="6" r="1.3"/><circle cx="3.6" cy="12" r="1.3"/><circle cx="3.6" cy="18" r="1.3"/></svg>
+      <div style="font-size: 10px; color: rgba(235,235,245,0.4);">기록</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="rgba(235,235,245,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="13" rx="2.2"/><path d="M8 21h8"/><path d="M12 18v3"/></svg>
+      <div style="font-size: 10px; color: rgba(235,235,245,0.4);">장비</div>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="rgba(235,235,245,0.4)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>
+      <div style="font-size: 10px; color: rgba(235,235,245,0.4);">설정</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"alert":{"editor":"boolean","default":false,"section":"상태"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const on = this.props.alert ?? false;
+    return {
+      s: on
+        ? { title: '움직임 감지', sub: '02:41 · 임계값 초과', energy: '1.204', amp: '3.4',
+            tint: '#FF453A', dot: '#FF453A', mark: 'M12 9v3.5M12 15.4h.01',
+            cardBg: 'rgba(255,69,58,0.10)', cardBorder: 'rgba(255,69,58,0.32)', iconBg: 'rgba(255,69,58,0.16)' }
+        : { title: '이상 없음', sub: '실내에 움직임이 없습니다', energy: '0.579', amp: '0.8',
+            tint: '#30D158', dot: '#30D158', mark: 'M9 12l2.2 2.2L15.4 10',
+            cardBg: '#1C1C1E', cardBorder: 'rgba(84,84,88,0.35)', iconBg: 'rgba(48,209,88,0.16)' }
+    };
+  }
+}
+</script>
+</body>
+</html>

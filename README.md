@@ -330,6 +330,7 @@ git push
 | [`data/README.md`](./data/README.md) | 캡처 파일별 **실제** 환경 조건 대장 |
 | [`SOURCES.md`](./SOURCES.md) | 외부 자료 출처와 **검증 여부** 구분 |
 | [`HARDWARE_PLAN.md`](./HARDWARE_PLAN.md) | 트래픽 발생기 ESP32-C5 교체 계획 · 안테나 한계 |
+| [`design/`](./design/) | 모바일 앱 GUI 디자인 (iOS 다크 테마 5화면) |
 
 ---
 

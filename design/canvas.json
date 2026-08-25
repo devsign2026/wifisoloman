@@ -1,0 +1,14 @@
+{
+  "artboards": [
+    { "file": "MonitorOff.dc.html", "x": 0,    "y": 0, "w": 390, "h": 844, "title": "모니터 · 모드 꺼짐" },
+    { "file": "Main.dc.html",       "x": 490,  "y": 0, "w": 390, "h": 844, "title": "모니터 · 감시 중" },
+    { "file": "Events.dc.html",     "x": 980,  "y": 0, "w": 390, "h": 844, "title": "기록" },
+    { "file": "Device.dc.html",     "x": 1470, "y": 0, "w": 390, "h": 844, "title": "장비" },
+    { "file": "Settings.dc.html",   "x": 1960, "y": 0, "w": 390, "h": 844, "title": "설정" }
+  ],
+  "annotations": [
+    { "id": "brief", "x": 0, "y": -160, "w": 560, "text": "WiFi CSI 센싱 앱 — iOS 다크 테마\n외출 모드를 켜야 감시가 시작됩니다. 기록 탭은 모드와 무관하게 항상 볼 수 있습니다.\n실측값 반영: RSSI -43dBm · 42.3Hz · 채널 149/80MHz · 기준선 0.579" },
+    { "id": "note-flow", "x": 0, "y": 890, "w": 880, "text": "왼쪽 두 화면이 같은 모니터 탭의 두 상태입니다. 감시 중 화면의 '상태' 칩으로 이상 없음 / 움직임 감지를 전환해 볼 수 있습니다." }
+  ],
+  "launch": { "view": "canvas" }
+}
