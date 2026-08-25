@@ -7,7 +7,7 @@ csi_pipeline.py는 서브캐리어를 결합해 BPM 하나를 뱉는다. 신호�
 이 스크립트는 결합 전에 서브캐리어를 개별로 훑어 피크 주파수 분포를 보여준다.
 
 판정 기준:
-  - 밴드 0.1~0.6Hz에서 ±0.02Hz 구간이 우연히 맞을 확률 ≈ 8%
+  - 밴드 0.15~0.6Hz에서 ±0.02Hz 구간이 우연히 맞을 확률 ≈ 9%
   - 히트율이 8%를 유의미하게 넘어야 신호가 있는 것
   - 피크가 밴드 최하단(0.10Hz)에 몰리면 호흡이 아니라 느린 드리프트
 
@@ -18,12 +18,13 @@ csi_pipeline.py는 서브캐리어를 결합해 BPM 하나를 뱉는다. 신호�
 import argparse
 import numpy as np
 
-from csi_pipeline import load_amplitude, resample_uniform, bandpass_filter
+from csi_pipeline import (load_amplitude, resample_uniform,
+                          bandpass_filter, usable_subcarriers)
 
-CHANCE_RATE = 0.08  # 밴드 0.1~0.6Hz에서 ±0.02Hz가 우연히 맞을 확률
+CHANCE_RATE = 0.09  # 밴드 0.15~0.6Hz에서 ±0.02Hz가 우연히 맞을 확률
 
 
-def subcarrier_peaks(pcap_path, low=0.1, high=0.6, edge_guard=6, seconds=None):
+def subcarrier_peaks(pcap_path, low=0.15, high=0.6, edge_guard=6, seconds=None):
     """서브캐리어별로 밴드패스 + FFT -> (피크주파수[], 선명도[], fs, 길이)"""
     timestamps, amplitude = load_amplitude(pcap_path)
 
@@ -36,12 +37,7 @@ def subcarrier_peaks(pcap_path, low=0.1, high=0.6, edge_guard=6, seconds=None):
             raise ValueError(f"--seconds {seconds}가 캡처보다 깁니다")
         timestamps, amplitude = timestamps[keep], amplitude[keep]
 
-    usable = np.isfinite(amplitude).all(axis=0)
-    usable[:edge_guard] = False
-    usable[-edge_guard:] = False
-    valid = amplitude[:, usable]
-    if valid.shape[1] == 0:
-        raise ValueError("유효한 서브캐리어가 없습니다")
+    _, valid = usable_subcarriers(amplitude, edge_guard=edge_guard)
 
     fs = (len(timestamps) - 1) / (timestamps[-1] - timestamps[0])
 
@@ -64,7 +60,7 @@ def subcarrier_peaks(pcap_path, low=0.1, high=0.6, edge_guard=6, seconds=None):
     return peaks, sharpness, fs, filtered.shape[0] / fs
 
 
-def diagnose(pcap_path, expect_bpm=None, low=0.1, high=0.6, tol=0.02, seconds=None):
+def diagnose(pcap_path, expect_bpm=None, low=0.15, high=0.6, tol=0.02, seconds=None):
     peaks, sharpness, fs, duration = subcarrier_peaks(
         pcap_path, low=low, high=high, seconds=seconds)
 
@@ -114,7 +110,7 @@ def main():
     parser.add_argument("pcap", help="입력 pcap 경로")
     parser.add_argument("--expect", type=float, default=None,
                         help="정답 호흡수 (BPM). 생략하면 분포만 출력")
-    parser.add_argument("--low", type=float, default=0.1, help="밴드패스 하한 (Hz)")
+    parser.add_argument("--low", type=float, default=0.15, help="밴드패스 하한 (Hz). 0.15=9회/분 — 그 아래는 호흡이 아니라 몸 움직임")
     parser.add_argument("--high", type=float, default=0.6, help="밴드패스 상한 (Hz)")
     parser.add_argument("--seconds", type=float, default=None,
                         help="앞에서부터 N초만 사용 (길이 다른 캡처끼리 비교할 때)")
