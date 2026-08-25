@@ -1,0 +1,15 @@
+#!/bin/sh
+# 민감값이 스테이징된 파일에 있으면 커밋을 막는다.
+# config.sh 는 .gitignore 대상이라 여기 걸리지 않는다.
+PATTERN='([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}|m\+ABEQ[A-Za-z0-9+/=]+'
+FOUND=$(git diff --cached --name-only --diff-filter=ACM \
+        | grep -E '\.(md|py|sh)$' \
+        | xargs -I{} git diff --cached -U0 -- {} 2>/dev/null \
+        | grep -E "^\+" | grep -EI "$PATTERN")
+if [ -n "$FOUND" ]; then
+  echo "커밋 차단: 민감값이 포함되어 있습니다."
+  echo "$FOUND" | head -5
+  echo ""
+  echo "실제 값 대신 \$TX_MAC / \$ROUTER_SSID / \$CSI_PARAMS 변수를 쓰세요."
+  exit 1
+fi
