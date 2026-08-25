@@ -32,6 +32,15 @@ from csi_stream import iter_frames
 # ⚠️ 배치나 ping이 바뀌면 빈 방을 다시 찍어 재보정할 것.
 DEFAULT_THRESHOLD = 0.75
 
+# 기준선 실측 구간 (2026-08-26, 30초 창). 그래프 배경에 깔아 현재 위치를 보여준다.
+EMPTY_RANGE = (0.519, 0.733)
+OCCUPIED_RANGE = (0.709, 1.215)
+
+# 파형 y축 고정값. 자동 스케일이면 진폭이 4배 변해도 화면상 크기가 같아서
+# 눈으로 변화를 알 수 없다. 빈 방 ±0.8 / 사람 ±3.5 실측을 담는 범위로 고정.
+WAVE_YLIM = 6.0
+TREND_YLIM = (0.3, 1.6)
+
 TCPDUMP = "sudo tcpdump -i wlan0 dst port 5500 -U -w - 2>/dev/null"
 
 
@@ -149,6 +158,11 @@ def main():
                 print(f"[오류] 스트림 끊김: {col.error}")
                 break
             t, c = col.snapshot()
+            if t is not None and len(t):
+                # 버퍼는 창의 1.5배까지 보관하지만 분석은 정확히 창 길이만 쓴다.
+                # (이걸 안 하면 --window 30 인데 실제로는 45초를 봐서 반응이 느려진다)
+                keep = t >= t[-1] - args.window
+                t, c = t[keep], c[keep]
             if t is None or len(t) < 100:
                 plt.pause(1.0 / args.fps)
                 continue
@@ -172,21 +186,38 @@ def main():
 
             ax_wave.clear()
             ax_wave.plot(x, wave, color=color, lw=1.2)
-            ax_wave.set_title(f"호흡 대역 위상 파형  ({args.low}~{args.high}Hz, "
-                              f"{t[-1]-t[0]:.0f}초, {fs:.0f}Hz, {col.count}프레임)")
+            ax_wave.set_ylim(-WAVE_YLIM, WAVE_YLIM)      # ⚠️ 고정. 자동스케일 금지
+            ax_wave.axhspan(-0.9, 0.9, color="#2a9d8f", alpha=0.10)
+            ax_wave.text(0.01, 0.97, "← 이 띠 안에 머물면 빈 방 수준",
+                         transform=ax_wave.transAxes, va="top", fontsize=9,
+                         color="#2a9d8f")
+            peak = np.abs(wave).max()
+            ax_wave.set_title(f"호흡 대역 위상 파형  |  진폭 ±{peak:.2f}  "
+                              f"({t[-1]-t[0]:.0f}초, {fs:.0f}Hz, {col.count}프레임)")
             ax_wave.set_xlabel("시간 (s)")
             ax_wave.grid(alpha=0.25)
 
             ax_trend.clear()
+            ax_trend.axhspan(*EMPTY_RANGE, color="#2a9d8f", alpha=0.15)
+            ax_trend.axhspan(*OCCUPIED_RANGE, color="#d1495b", alpha=0.12)
+            ax_trend.text(0.01, EMPTY_RANGE[1], " 빈 방 실측 구간", va="top",
+                          fontsize=9, color="#2a9d8f",
+                          transform=ax_trend.get_yaxis_transform())
+            ax_trend.text(0.01, OCCUPIED_RANGE[1], " 사람 있음 실측 구간", va="top",
+                          fontsize=9, color="#d1495b",
+                          transform=ax_trend.get_yaxis_transform())
             if rms_hist:
-                ax_trend.plot(list(t_hist), list(rms_hist), "-", color=color, lw=1.6)
-            ax_trend.axhline(args.threshold, color="gray", ls="--", lw=1,
-                             label=f"임계값 {args.threshold}")
+                ax_trend.plot(list(t_hist), list(rms_hist), "-", color=color, lw=2)
+            ax_trend.axhline(args.threshold, color="#333", ls="--", lw=1.2)
+            ax_trend.set_ylim(*TREND_YLIM)               # ⚠️ 고정
             now = f"{rms:.3f}" if rms is not None else "—"
-            ax_trend.set_title(f"대역 에너지 추이 — 현재 {now}  →  {verdict}")
+            ax_trend.set_title(f"대역 에너지 — 현재 {now}  (임계값 {args.threshold})",
+                               fontsize=11)
+            ax_trend.text(0.5, 0.5, verdict, transform=ax_trend.transAxes,
+                          ha="center", va="center", fontsize=34, color=color,
+                          alpha=0.28, fontweight="bold")
             ax_trend.set_xlabel("경과 시간 (s)")
             ax_trend.set_ylabel("위상 rms")
-            ax_trend.legend(loc="upper right")
             ax_trend.grid(alpha=0.25)
 
             fig.tight_layout()
