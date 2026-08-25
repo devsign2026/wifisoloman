@@ -86,11 +86,22 @@ class Collector(threading.Thread):
             pass
 
 
-def analyze(t, csi, low, high, window_s, max_sub=80):
-    """(파형 시간축, 파형, 대역 rms, 실측 fs) — 데이터가 모자라면 None."""
+def band_rms(mat, fs, low, high, edge_s):
+    """구간 행렬 -> 대역 통과 후 rms (서브캐리어 중앙값). 짧으면 None."""
+    filtered = np.apply_along_axis(
+        lambda y: bandpass_filter(y, fs, low=low, high=high), 0, mat)
+    edge = int(edge_s * fs)
+    if filtered.shape[0] <= 2 * edge + 10:
+        return None, None
+    trimmed = filtered[edge:-edge]
+    return np.median(trimmed.std(axis=0)), trimmed
+
+
+def analyze(t, csi, low, high, window_s, max_sub=80, fast_s=12):
+    """(파형 시간축, 파형, 느린 rms, 빠른 rms, 실측 fs) — 모자라면 None."""
     span = t[-1] - t[0]
     if span < 12 or len(t) < 200:
-        return None, None, None, None
+        return None, None, None, None, None
 
     phase = sanitize_phase(np.angle(csi))
     # 계산량을 줄이려고 변동 큰 서브캐리어만 쓴다
@@ -104,14 +115,18 @@ def analyze(t, csi, low, high, window_s, max_sub=80):
     for i in range(phase.shape[1]):
         _, mat[:, i] = resample_uniform(t, phase[:, i], fs)
 
-    filtered = np.apply_along_axis(
-        lambda y: bandpass_filter(y, fs, low=low, high=high), 0, mat)
-    edge = int(3 * fs)
-    if filtered.shape[0] <= 2 * edge:
-        return None, None, None, fs
-    trimmed = filtered[edge:-edge]
+    rms, trimmed = band_rms(mat, fs, low, high, edge_s=3)
+    if trimmed is None:
+        return None, None, None, None, fs
+    if span < window_s * 0.8:
+        rms = None
 
-    rms = np.median(trimmed.std(axis=0)) if span >= window_s * 0.8 else None
+    # 빠른 선: 마지막 fast_s 초만 본다. 0.15Hz는 주기 6.7초라 최소 2주기(13초)가
+    # 필요하므로 이보다 짧게는 못 줄인다. 대신 가장자리 잘라내기를 줄여 보완.
+    n_fast = int(fast_s * fs)
+    fast = None
+    if mat.shape[0] > n_fast > 0:
+        fast, _ = band_rms(mat[-n_fast:], fs, low, high, edge_s=1.5)
 
     top = np.argsort(trimmed.std(axis=0))[::-1][:20]
     seg = trimmed[:, top]
@@ -119,7 +134,7 @@ def analyze(t, csi, low, high, window_s, max_sub=80):
     signs = np.sign([np.corrcoef(ref, seg[:, i])[0, 1] for i in range(seg.shape[1])])
     signs[signs == 0] = 1
     wave = (seg * signs).mean(axis=1)
-    return np.arange(len(wave)) / fs, wave, rms, fs
+    return np.arange(len(wave)) / fs, wave, rms, fast, fs
 
 
 def main():
@@ -130,6 +145,8 @@ def main():
     ap.add_argument("--window", type=float, default=30, help="분석 창 (초)")
     ap.add_argument("--low", type=float, default=0.15)
     ap.add_argument("--high", type=float, default=0.6)
+    ap.add_argument("--fast", type=float, default=12,
+                    help="빠른 선의 창 (초). 0.15Hz 2주기가 하한이라 13초 미만은 무의미")
     ap.add_argument("--fps", type=float, default=2, help="화면 갱신 (초당)")
     ap.add_argument("--history", type=int, default=200)
     args = ap.parse_args()
@@ -147,6 +164,7 @@ def main():
     fig, (ax_wave, ax_trend) = plt.subplots(2, 1, figsize=(11, 7))
     fig.canvas.manager.set_window_title("CSI 실시간 모니터")
     rms_hist, t_hist = deque(maxlen=args.history), deque(maxlen=args.history)
+    fast_hist, tf_hist = deque(maxlen=args.history), deque(maxlen=args.history)
     import time
     t0 = time.time()
 
@@ -167,7 +185,8 @@ def main():
                 plt.pause(1.0 / args.fps)
                 continue
 
-            x, wave, rms, fs = analyze(t, c, args.low, args.high, args.window)
+            x, wave, rms, fast, fs = analyze(t, c, args.low, args.high,
+                                             args.window, fast_s=args.fast)
             if wave is None:
                 span = t[-1] - t[0]
                 print(f"\r  버퍼 {span:4.1f}s / {args.window:.0f}s  ({col.count}프레임)",
@@ -183,6 +202,9 @@ def main():
                 color = "#d1495b" if present else "#2a9d8f"
                 rms_hist.append(rms)
                 t_hist.append(time.time() - t0)
+            if fast is not None:
+                fast_hist.append(fast)
+                tf_hist.append(time.time() - t0)
 
             ax_wave.clear()
             ax_wave.plot(x, wave, color=color, lw=1.2)
@@ -206,13 +228,19 @@ def main():
             ax_trend.text(0.01, OCCUPIED_RANGE[1], " 사람 있음 실측 구간", va="top",
                           fontsize=9, color="#d1495b",
                           transform=ax_trend.get_yaxis_transform())
+            if fast_hist:
+                ax_trend.plot(list(tf_hist), list(fast_hist), "-", color="#4a5568",
+                              lw=1.0, alpha=0.55, label=f"빠름 ({args.fast:.0f}초 창)")
             if rms_hist:
-                ax_trend.plot(list(t_hist), list(rms_hist), "-", color=color, lw=2)
+                ax_trend.plot(list(t_hist), list(rms_hist), "-", color=color, lw=2.4,
+                              label=f"판정 ({args.window:.0f}초 창)")
+            ax_trend.legend(loc="upper left", fontsize=9)
             ax_trend.axhline(args.threshold, color="#333", ls="--", lw=1.2)
             ax_trend.set_ylim(*TREND_YLIM)               # ⚠️ 고정
             now = f"{rms:.3f}" if rms is not None else "—"
-            ax_trend.set_title(f"대역 에너지 — 현재 {now}  (임계값 {args.threshold})",
-                               fontsize=11)
+            fnow = f"{fast:.3f}" if fast is not None else "—"
+            ax_trend.set_title(f"대역 에너지 — 판정 {now} / 빠름 {fnow}  "
+                               f"(임계값 {args.threshold})", fontsize=11)
             ax_trend.text(0.5, 0.5, verdict, transform=ax_trend.transAxes,
                           ha="center", va="center", fontsize=34, color=color,
                           alpha=0.28, fontweight="bold")
