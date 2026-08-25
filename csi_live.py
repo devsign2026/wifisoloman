@@ -2,6 +2,9 @@
 """
 CSI 실시간 모니터 — tcpdump 출력을 SSH 파이프로 계속 받아 즉시 그린다.
 
+검출 대상은 "재실"이 아니라 "움직임"이다. 가만히 앉은 사람은 빈 방과
+구별되지 않는다는 것이 통제 실험으로 확인되었다 (history.md 27번).
+
 이전 버전은 5초씩 끊어 캡처하고 파일을 통째로 받아왔다. 캡처가 끝날 때까지
 아무것도 안 보이고 SSH 왕복이 매번 붙어 지연이 심했다.
 이 버전은 tcpdump `-U -w -` (패킷마다 flush)를 파이프로 받아 스트림 파서로
@@ -25,19 +28,21 @@ import numpy as np
 from csi_pipeline import sanitize_phase, resample_uniform, bandpass_filter
 from csi_stream import iter_frames
 
-# 직접 파서 기준 30초 창 실측 (2026-08-26 배치, ping -i 0.05):
-#   빈 방   0.519 ~ 0.733
-#   사람4명 0.709 ~ 1.215
-# 한 창이 겹치므로 그 중간보다 살짝 위로 잡는다.
+# 2026-08-26 구석 배치 실측 (30초 창, ping -i 0.02, RSSI -43dBm):
+#   빈 방          0.471 ~ 0.721  (중앙 0.579)
+#   정지한 사람     0.566 ~ 0.633  ← 빈 방과 구별되지 않는다
+#   걸어 들어옴     0.862 ~ 0.905
+#
+# 즉 이 지표가 검출하는 것은 "재실"이 아니라 "움직임"이다.
+# 가만히 있는 사람은 빈 방과 같은 값을 낸다 (history.md 27번).
 # ⚠️ 배치나 ping이 바뀌면 빈 방을 다시 찍어 재보정할 것.
-DEFAULT_THRESHOLD = 0.75
+DEFAULT_THRESHOLD = 0.78
 
-# 기준선 실측 구간 (2026-08-26, 30초 창). 그래프 배경에 깔아 현재 위치를 보여준다.
-EMPTY_RANGE = (0.519, 0.733)
-OCCUPIED_RANGE = (0.709, 1.215)
+QUIET_RANGE = (0.471, 0.721)     # 빈 방 = 정지한 사람
+MOTION_RANGE = (0.86, 1.25)      # 걷기 등 몸 움직임
 
 # 파형 y축 고정값. 자동 스케일이면 진폭이 4배 변해도 화면상 크기가 같아서
-# 눈으로 변화를 알 수 없다. 빈 방 ±0.8 / 사람 ±3.5 실측을 담는 범위로 고정.
+# 눈으로 변화를 알 수 없다. 빈 방 ±0.8 / 움직임 ±3.5 실측을 담는 범위.
 WAVE_YLIM = 6.0
 TREND_YLIM = (0.3, 1.6)
 
@@ -141,7 +146,8 @@ def main():
     ap = argparse.ArgumentParser(description="CSI 실시간 모니터 (스트리밍)")
     ap.add_argument("--host", default=os.environ.get("PI_HOST", "raspberrypi.local"))
     ap.add_argument("--user", default=os.environ.get("PI_USER", "pi"))
-    ap.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
+    ap.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD,
+                    help="움직임 판정 임계값. 빈 방 최대 0.721 위로 잡을 것")
     ap.add_argument("--window", type=float, default=30, help="분석 창 (초)")
     ap.add_argument("--low", type=float, default=0.15)
     ap.add_argument("--high", type=float, default=0.6)
@@ -198,7 +204,7 @@ def main():
                 verdict, color = "판정 대기 (30초 필요)", "#8d99ae"
             else:
                 present = rms > args.threshold
-                verdict = "사람 있음" if present else "사람 없음"
+                verdict = "움직임 감지" if present else "조용함"
                 color = "#d1495b" if present else "#2a9d8f"
                 rms_hist.append(rms)
                 t_hist.append(time.time() - t0)
@@ -220,12 +226,12 @@ def main():
             ax_wave.grid(alpha=0.25)
 
             ax_trend.clear()
-            ax_trend.axhspan(*EMPTY_RANGE, color="#2a9d8f", alpha=0.15)
-            ax_trend.axhspan(*OCCUPIED_RANGE, color="#d1495b", alpha=0.12)
-            ax_trend.text(0.01, EMPTY_RANGE[1], " 빈 방 실측 구간", va="top",
+            ax_trend.axhspan(*QUIET_RANGE, color="#2a9d8f", alpha=0.15)
+            ax_trend.axhspan(*MOTION_RANGE, color="#d1495b", alpha=0.12)
+            ax_trend.text(0.01, QUIET_RANGE[1], " 조용함 (빈 방 = 정지한 사람)", va="top",
                           fontsize=9, color="#2a9d8f",
                           transform=ax_trend.get_yaxis_transform())
-            ax_trend.text(0.01, OCCUPIED_RANGE[1], " 사람 있음 실측 구간", va="top",
+            ax_trend.text(0.01, MOTION_RANGE[1], " 움직임 실측 구간", va="top",
                           fontsize=9, color="#d1495b",
                           transform=ax_trend.get_yaxis_transform())
             if fast_hist:
