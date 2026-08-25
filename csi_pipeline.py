@@ -48,6 +48,46 @@ def load_amplitude(pcap_path):
     return timestamps[idx], amplitude[idx]
 
 
+def load_phase(pcap_path):
+    """
+    pcap -> (timestamps[N], 정제된 위상[N, subcarriers])
+
+    호흡은 가슴 움직임이 전파 경로 길이를 바꾸는 현상이고, 경로 길이는 위상에
+    직접 나타난다. 진폭 변화는 2차 효과라 훨씬 약하다 — 실제로 같은 A/B 캡처에서
+    진폭은 재실 여부를 전혀 구분하지 못했고(p=0.900) 위상은 완전히 갈랐다(p<0.001).
+
+    원시 위상은 CFO/SFO/패킷 검출 지연 때문에 패킷마다 서브캐리어축으로
+    선형 위상 램프가 얹혀 있다. 이를 제거해야 쓸 수 있다.
+    """
+    reader = get_reader(pcap_path)
+    data = reader.read_file(pcap_path)
+    phase, _, _ = csitools.get_CSI(data, metric="phase")
+    phase = phase[:, :, 0, 0]
+    timestamps = np.array(data.timestamps, dtype=np.float64)
+
+    good = np.isfinite(timestamps) & (timestamps > 0)
+    good &= np.isfinite(phase).all(axis=1)
+    idx = np.flatnonzero(good)
+    if len(idx) == 0:
+        raise ValueError(f"{pcap_path}: 유효한 프레임이 없습니다")
+    regress = np.flatnonzero(np.diff(timestamps[idx]) < 0)
+    if len(regress):
+        idx = idx[: regress[0] + 1]
+    return timestamps[idx], phase[idx]
+
+
+def sanitize_phase(phase, edge_guard=6):
+    """패킷마다 서브캐리어축 선형 위상 램프(CFO/SFO/검출지연)를 제거."""
+    sub = slice(edge_guard, phase.shape[1] - edge_guard)
+    unwrapped = np.unwrap(phase[:, sub], axis=1)
+
+    k = np.arange(phase.shape[1])[sub].astype(np.float64)
+    k_centered = k - k.mean()
+    slope = (unwrapped * k_centered).sum(axis=1) / (k_centered ** 2).sum()
+    offset = unwrapped.mean(axis=1)
+    return unwrapped - slope[:, None] * k_centered[None, :] - offset[:, None]
+
+
 def usable_subcarriers(amplitude, edge_guard=6, max_bad_frac=0.01):
     """
     쓸 수 있는 서브캐리어의 인덱스와, 결측을 메운 진폭 행렬을 반환.
